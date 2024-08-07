@@ -1,10 +1,10 @@
 #importing required packages
 import streamlit as st
 import pandas as pd
-from tensorflow.keras.models import load_model
+import tensorflow as tf  # Import TensorFlow
 
 # Loading model
-model = load_model('Ann.keras')
+model = tf.keras.models.load_model('Ann.keras')
 
 # Defining label encoder mappings
 gender_mapping = {'Male': 0, 'Female': 1}
