@@ -1,11 +1,9 @@
 numpy==1.26.4
 pandas==1.4.4
-scikit-learn==1.2.2
 tensorflow==2.17.0
-keras-tuner==1.2.0
+keras==3.4.1
 seaborn==0.11.2
 matplotlib==3.5.2
-nltk==3.8.1
 streamlit==1.14.0
 
 
