@@ -1,1 +1,10 @@
-# Banking-Customer-Churn-Prediction
+# Banking-Customer-Churn-Prediction using Deep Learning Model (Artificial Neural Network)
+
+## Overview
+Welcome to the Banking Customer Churn Prediction project! This repository contains all the necessary files and scripts to predict customer churn in a banking environment using an Artificial Neural Network (ANN). Customer churn is a critical issue in the banking industry as retaining existing customers is often more cost-effective than acquiring new ones. By leveraging historical customer data, this project aims to build a predictive model to identify customers who are likely to leave the bank, enabling proactive retention strategies.
+
+## Project Details
+The project involves several key steps, including data preprocessing, feature engineering, model training, and evaluation. The dataset used contains various features such as customer credit scores, age, balance, number of products, and more. Data preprocessing includes handling missing values, encoding categorical variables, and standardizing the features. An Artificial Neural Network (ANN) is then constructed using TensorFlow and Keras, optimized with hyperparameter tuning to enhance model performance. The model is trained on a balanced dataset using the SMOTE technique to handle class imbalance, and its performance is evaluated using metrics such as precision, recall, F1-score, and AUC.
+
+## Getting Started
+To get started with this project, clone the repository and ensure you have all the necessary dependencies installed, as listed in the requirements.txt file. The main scripts include Customer churn prediction.ipynb for data preparation,building and training the ANN, and App.py for the application interface using streamlit for assessing the model's performance. Detailed explanations and code comments are provided within the scripts to guide you through the process. Whether you are a data scientist looking to improve your machine learning skills or a business analyst interested in churn prediction, this project offers a comprehensive approach to tackling customer churn using advanced machine learning techniques.
