@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import tensorflow as tf  # Import TensorFlow
+from sklearn.preprocessing import StandardScaler
 
 # Loading model
 model = tf.keras.models.load_model('Ann.keras')
@@ -10,9 +11,12 @@ model = tf.keras.models.load_model('Ann.keras')
 gender_mapping = {'Male': 0, 'Female': 1}
 geography_mapping = {'France': 0, 'Germany': 1, 'Spain': 2}
 
+# Initializing scaler (assuming you used StandardScaler during training)
+scaler = StandardScaler()
+
 st.header('Bank Customer Churn Prediction')
 
-# Display image
+# Displaying image
 st.image('https://uxpressia.com/blog/wp-content/uploads/2022/12/Frame-20-640x339.png')
 
 # Input fields
@@ -38,7 +42,7 @@ if st.sidebar.button('Predict'):
         'Age': [age],
         'Tenure': [tenure],
         'Balance': [balance],
-        'NumberOfProducts': [num_of_products],
+        'NumOfProducts': [num_of_products],
         'HasCrCard': [1 if has_credit_card == 'Yes' else 0],
         'IsActiveMember': [1 if is_active_member == 'Yes' else 0],
         'EstimatedSalary': [estimated_salary],
@@ -50,15 +54,17 @@ if st.sidebar.button('Predict'):
     input_data['Gender'] = input_data['Gender'].map(gender_mapping).astype(int)
     input_data['Geography'] = input_data['Geography'].map(geography_mapping).astype(int)
 
+    # Applying scaling
+    input_data_scaled = scaler.fit_transform(input_data)  # Apply scaling
+
     # Making the prediction
-    prediction = model.predict(input_data)
+    prediction = model.predict(input_data_scaled)
     predicted_prob = prediction[0][0]  # Assuming the output is a probability
     result = 'churn' if predicted_prob > 0.5 else 'remain with the bank'
     
     # Displaying the prediction result
     st.subheader('Prediction Result')
-    st.write(f'The customer is likely to {result}, probability of churning is {predicted_prob:.2f}.')
-
+    st.write(f'The customer is likely to {result}, probability of churning is {predicted_prob:.6f}.')
 
 # File upload for bulk prediction
 st.sidebar.header('Bulk Prediction')
@@ -75,18 +81,15 @@ if uploaded_file is not None:
 
         # Selecting only the columns required for prediction
         required_columns = [
-            'CreditScore', 'Age', 'Tenure', 'Balance', 'NumberOfProducts',
+            'CreditScore', 'Age', 'Tenure', 'Balance', 'NumOfProducts',
             'HasCrCard', 'IsActiveMember', 'EstimatedSalary', 'Geography', 'Gender'
         ]
 
-        # Handling missing columns by filling with default values or excluding them
+        # Handling missing columns by filling with default values
         for column in required_columns:
             if column not in bulk_data.columns:
                 st.warning(f'Missing column: {column}. Adding default values.')
-                if column in ['CreditScore', 'Age', 'Tenure', 'Balance', 'NumberOfProducts', 'EstimatedSalary']:
-                    bulk_data[column] = 0
-                else:
-                    bulk_data[column] = 0
+                bulk_data[column] = 0
 
         # Filtering only required columns
         bulk_data = bulk_data[required_columns]
@@ -95,8 +98,11 @@ if uploaded_file is not None:
         bulk_data['Gender'] = bulk_data['Gender'].map(gender_mapping).astype(int)
         bulk_data['Geography'] = bulk_data['Geography'].map(geography_mapping).astype(int)
 
+        # Apply scaling to bulk data if necessary
+        bulk_data_scaled = scaler.transform(bulk_data)  # Apply scaling
+
         # Making bulk predictions
-        bulk_predictions = model.predict(bulk_data)
+        bulk_predictions = model.predict(bulk_data_scaled)
 
         # Adding prediction results to the bulk data
         bulk_data['Churn Probability'] = bulk_predictions
@@ -107,9 +113,9 @@ if uploaded_file is not None:
         st.download_button(label='Download Predictions', data=bulk_data.to_csv(index=False), file_name='bulk_predictions.csv', mime='text/csv')
     except Exception as e:
         st.error(f"An error occurred: {e}")
-        
+
 st.write('''
- ### About Customer Churn in Banking
+### About Customer Churn in Banking
 In the banking sector, customer churn is a critical issue that can significantly impact a bank's profitability and growth. Churn occurs when customers close their accounts and move to competitors, often due to dissatisfaction with services or better offers elsewhere. Identifying potential churners in advance allows banks to take proactive measures to retain these customers, thereby reducing churn rates and maintaining a stable customer base.
  
 This application leverages a deep learning model, specifically an Artificial Neural Network (ANN), to predict whether a bank customer is likely to churn based on their profile information. ANNs are powerful machine learning models inspired by the human brain's neural networks, capable of capturing complex patterns and relationships in data. By inputting various customer attributes such as credit score, age, tenure, balance, number of products, credit card status, active member status, estimated salary, geography, and gender, the ANN model processes these features and outputs a prediction indicating the likelihood of customer churn. This predictive capability enables banks to implement targeted retention strategies and improve customer satisfaction.
