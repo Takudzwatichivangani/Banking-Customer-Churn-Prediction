@@ -3,9 +3,14 @@ import streamlit as st
 import pandas as pd
 import tensorflow as tf  # Import TensorFlow
 from sklearn.preprocessing import StandardScaler
+import joblib
+
 
 # Loading model
 model = tf.keras.models.load_model('Ann.keras')
+
+# Loading the scaler
+scaler = joblib.load('scaler.pkl')
 
 # Defining label encoder mappings
 gender_mapping = {'Male': 0, 'Female': 1}
