@@ -1,27 +1,21 @@
-#importing required packages
 import streamlit as st
 import pandas as pd
-import tensorflow as tf  # Import TensorFlow
-from sklearn.preprocessing import StandardScaler
-import joblib
+import tensorflow as tf
+import joblib  # Import joblib to load the scaler
 
-
-# Loading model
+# Loading the trained ANN model
 model = tf.keras.models.load_model('Ann.keras')
 
-# Loading the scaler
+# Loading the StandardScaler used during training
 scaler = joblib.load('scaler.pkl')
 
 # Defining label encoder mappings
 gender_mapping = {'Male': 0, 'Female': 1}
 geography_mapping = {'France': 0, 'Germany': 1, 'Spain': 2}
 
-# Initializing scaler (assuming you used StandardScaler during training)
-scaler = StandardScaler()
-
 st.header('Bank Customer Churn Prediction')
 
-# Displaying image
+# Displaying an image
 st.image('https://uxpressia.com/blog/wp-content/uploads/2022/12/Frame-20-640x339.png')
 
 # Input fields
@@ -35,7 +29,7 @@ has_credit_card = st.sidebar.selectbox('Has Credit Card', ('Yes', 'No'))
 is_active_member = st.sidebar.selectbox('Is Active Member', ('Yes', 'No'))
 estimated_salary = st.sidebar.number_input('Estimated Salary', min_value=0)
 
-# Dropdowns
+# Dropdowns for additional information
 st.sidebar.header('Additional Information')
 geography = st.sidebar.selectbox('Geography', ('France', 'Germany', 'Spain'))
 gender = st.sidebar.selectbox('Gender', ('Male', 'Female'))
@@ -59,17 +53,17 @@ if st.sidebar.button('Predict'):
     input_data['Gender'] = input_data['Gender'].map(gender_mapping).astype(int)
     input_data['Geography'] = input_data['Geography'].map(geography_mapping).astype(int)
 
-    # Applying scaling
-    input_data_scaled = scaler.fit_transform(input_data)  # Apply scaling
+    # Standardize the input data using the loaded scaler
+    input_data_scaled = scaler.transform(input_data)
 
-    # Making the prediction
+    # Make the prediction
     prediction = model.predict(input_data_scaled)
     predicted_prob = prediction[0][0]  # Assuming the output is a probability
     result = 'churn' if predicted_prob > 0.5 else 'remain with the bank'
-    
-    # Displaying the prediction result
+
+    # Display the prediction result
     st.subheader('Prediction Result')
-    st.write(f'The customer is likely to {result}, probability of churning is {predicted_prob:.6f}.')
+    st.write(f'The customer is likely to {result}, with a probability of churning at {predicted_prob:.6f}.')
 
 # File upload for bulk prediction
 st.sidebar.header('Bulk Prediction')
@@ -103,8 +97,8 @@ if uploaded_file is not None:
         bulk_data['Gender'] = bulk_data['Gender'].map(gender_mapping).astype(int)
         bulk_data['Geography'] = bulk_data['Geography'].map(geography_mapping).astype(int)
 
-        # Apply scaling to bulk data if necessary
-        bulk_data_scaled = scaler.transform(bulk_data)  # Apply scaling
+        # Standardize the bulk data using the loaded scaler
+        bulk_data_scaled = scaler.transform(bulk_data)
 
         # Making bulk predictions
         bulk_predictions = model.predict(bulk_data_scaled)
@@ -125,5 +119,6 @@ In the banking sector, customer churn is a critical issue that can significantly
  
 This application leverages a deep learning model, specifically an Artificial Neural Network (ANN), to predict whether a bank customer is likely to churn based on their profile information. ANNs are powerful machine learning models inspired by the human brain's neural networks, capable of capturing complex patterns and relationships in data. By inputting various customer attributes such as credit score, age, tenure, balance, number of products, credit card status, active member status, estimated salary, geography, and gender, the ANN model processes these features and outputs a prediction indicating the likelihood of customer churn. This predictive capability enables banks to implement targeted retention strategies and improve customer satisfaction.
 ''')
+
  
 
