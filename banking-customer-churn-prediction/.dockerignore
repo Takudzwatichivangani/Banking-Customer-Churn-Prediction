@@ -1,0 +1,16 @@
+.venv
+__pycache__
+.git
+.gitignore
+.vscode
+.idea
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.sqlite
+mlruns
+notebooks
+tests
+.env
+.env.*

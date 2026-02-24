@@ -1,0 +1,2 @@
+[console_scripts]
+banking-customer-churn-prediction = banking_customer_churn_prediction.__main__:main

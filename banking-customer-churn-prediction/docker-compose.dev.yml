@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+	api:
+		build: .
+		environment:
+			- API_PORT=8000
+			- ENV=development
+		ports:
+			- '8000:8000'
+		volumes:
+			- ./:/app:rw
+			- ./data:/app/data:rw
+	prometheus:
+		image: prom/prometheus:latest
+		ports:
+			- '9090:9090'
+		volumes:
+			- ./monitoring/prometheus:/etc/prometheus
+	grafana:
+		image: grafana/grafana:9.0.0
+		ports:
+			- '3000:3000'
+

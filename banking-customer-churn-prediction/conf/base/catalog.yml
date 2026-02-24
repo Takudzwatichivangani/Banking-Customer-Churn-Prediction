@@ -1,0 +1,74 @@
+# ==================== RAW DATA ====================
+raw_churn:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/Churn_Modelling.csv
+  load_args:
+    encoding: "utf-8"
+
+# ==================== INTERMEDIATE ====================
+cleaned_customers:
+  type: pandas.ParquetDataset
+  filepath: data/02_intermediate/cleaned_customers.parquet
+
+# ==================== PRIMARY ====================
+features:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/features.parquet
+
+target:
+  type: pandas.ParquetDataset
+  filepath: data/03_primary/target.parquet
+
+# ==================== FEATURE ENGINEERING ARTIFACTS ====================
+feature_preprocessor:
+  type: pickle.PickleDataset  # ✅ Use pickle instead
+  filepath: data/04_feature/preprocessor.pkl
+
+# ==================== MODEL INPUT SPLITS ====================
+X_train:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_train.parquet
+
+X_val:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_val.parquet
+
+X_test:
+  type: pandas.ParquetDataset
+  filepath: data/05_model_input/X_test.parquet
+
+y_train:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/y_train.pkl
+
+y_val:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/y_val.pkl
+
+y_test:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/y_test.pkl
+
+# ==================== MODEL ARTIFACTS ====================
+best_model:
+  type: pickle.PickleDataset  # ✅ Use pickle instead
+  filepath: data/06_models/best_model.pkl
+
+model_metrics:
+  type: json.JSONDataset
+  filepath: data/06_models/model_metrics.json
+
+# ==================== MODEL OUTPUT ====================
+predictions:
+  type: pandas.ParquetDataset
+  filepath: data/07_model_output/predictions.parquet
+
+high_risk_customers:
+  type: pandas.ParquetDataset  # ✅ CHANGED: From CSV to Parquet
+  filepath: data/07_model_output/high_risk_customers.parquet
+
+
+# ==================== MLFLOW INTEGRATION ====================
+mlflow_model:
+  type: kedro_mlflow.MLflowModelDataset  # ✅ ADDED: MLflow integration
+  flavor: mlflow.sklearn

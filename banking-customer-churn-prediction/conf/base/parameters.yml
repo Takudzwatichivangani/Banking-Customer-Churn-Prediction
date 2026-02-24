@@ -1,0 +1,74 @@
+# ==================== DATA PARAMETERS ====================
+data:
+  target: "Exited"
+  test_size: 0.15  # ✅ CHANGED: Added validation split
+  val_size: 0.15
+  random_state: 42
+  stratify: true
+  
+  columns:
+    numeric: ["CreditScore", "Age", "Tenure", "Balance", "NumOfProducts", "EstimatedSalary"]
+    categorical: ["Geography", "Gender"]
+    drop: ["RowNumber", "CustomerId", "Surname"]
+
+# ==================== FEATURE ENGINEERING ====================
+features:
+  derived:
+    - name: "avg_bal_per_product"
+      formula: "Balance / (NumOfProducts + 1e-9)"
+    - name: "tenure_bucket"
+      type: "categorical"
+      bins: [-1, 1, 3, 6, 10, 50]
+  
+  preprocessing:
+    numeric:
+      impute_strategy: "median"
+      scale_strategy: "standard"
+    categorical:
+      impute_strategy: "most_frequent"
+      encode_strategy: "onehot"
+
+# ==================== MODEL TRAINING ====================
+models:
+  logistic_regression:
+    C: 1.0
+    max_iter: 1000  # ✅ CHANGED: Increased iterations
+    class_weight: "balanced"  # ✅ ADDED: Handle class imbalance
+    random_state: ${data.random_state}
+    
+  random_forest:
+    n_estimators: 200
+    max_depth: 10
+    min_samples_split: 10  # ✅ ADDED: Regularization
+    class_weight: "balanced_subsample"  # ✅ ADDED
+    random_state: ${data.random_state}
+    n_jobs: -1  # ✅ ADDED: Parallel processing
+    
+  xgboost:
+    n_estimators: 200
+    max_depth: 6
+    learning_rate: 0.1
+    subsample: 0.8  # ✅ ADDED: Prevent overfitting
+    colsample_bytree: 0.8  # ✅ ADDED
+    objective: "binary:logistic"
+    eval_metric: "logloss"
+    random_state: ${data.random_state}
+
+
+# ==================== TRAINING CONFIG ====================
+training:
+  cv_folds: 5  # ✅ ADDED: Cross-validation
+  scoring_metric: "roc_auc"
+  refit: true
+  verbose: 1
+
+# ==================== INFERENCE ====================
+inference:
+  threshold: 0.5
+  high_risk_threshold: 0.7  # ✅ ADDED: Different threshold for high risk
+
+# ==================== MONITORING ====================
+monitoring:
+  drift_threshold: 0.05
+  retrain_threshold: 0.02  # ✅ ADDED: Performance degradation threshold
+  sample_size: 1000

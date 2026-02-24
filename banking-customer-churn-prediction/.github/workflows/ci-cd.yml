@@ -1,0 +1,171 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+
+env:
+  PYTHON_VERSION: '3.10'
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .[dev]
+    
+    - name: Lint with black
+      run: |
+        black --check src tests
+    
+    - name: Lint with flake8
+      run: |
+        flake8 src tests --count --max-complexity=10 --statistics
+    
+    - name: Type check with mypy
+      run: |
+        mypy src --ignore-missing-imports
+    
+    - name: Test with pytest
+      run: |
+        pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Security scan with Bandit
+      run: |
+        pip install bandit
+        bandit -r src -f html -o bandit-report.html
+    
+    - name: Upload security report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-report
+        path: bandit-report.html
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.DOCKER_REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Docker image size check
+      run: |
+        # Check if image size is reasonable
+        docker pull ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest || true
+        SIZE=$(docker images --format "{{.Size}}" ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest | sed 's/[^0-9.]*//g')
+        if (( $(echo "$SIZE > 2000" | bc -l) )); then
+          echo "Image size is too large: ${SIZE}MB"
+          exit 1
+        fi
+
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment"
+        # Add your deployment commands here
+        # Example: kubectl apply -f k8s/staging/
+    
+    - name: Run integration tests
+      run: |
+        echo "Running integration tests on staging"
+        # Add integration test commands
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment"
+        # Add your deployment commands here
+        # Example: kubectl apply -f k8s/production/
+    
+    - name: Notify deployment
+      run: |
+        # Send notification to Slack/Teams/Email
+        echo "Production deployment complete"
+
+  monitor:
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Check deployment health
+      run: |
+        # Check if services are healthy
+        echo "Checking deployment health"
+    
+    - name: Generate deployment report
+      run: |
+        echo "Generating deployment report"
+        # Generate a report of the deployment

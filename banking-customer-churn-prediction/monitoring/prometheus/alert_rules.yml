@@ -1,0 +1,74 @@
+groups:
+  - name: churn-api-alerts
+    rules:
+      # API Down Alert
+      - alert: ChurnAPIDown
+        expr: up{job="churn-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          environment: production
+        annotations:
+          summary: "Churn API is down"
+          description: "Churn Prediction API has been down for more than 1 minute"
+          runbook_url: "https://your-runbook.com/churn-api-down"
+
+      # High Error Rate Alert
+      - alert: HighErrorRate
+        expr: |
+          rate(churn_prediction_errors_total[5m]) * 100
+          /
+          (rate(churn_predictions_total[5m]) + rate(churn_prediction_errors_total[5m])) > 10
+        for: 2m
+        labels:
+          severity: warning
+          environment: production
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 10% for the last 5 minutes"
+          runbook_url: "https://your-runbook.com/high-error-rate"
+
+      # High Latency Alert
+      - alert: HighPredictionLatency
+        expr: |
+          histogram_quantile(0.95, rate(churn_prediction_latency_seconds_bucket[5m])) > 2
+        for: 3m
+        labels:
+          severity: warning
+          environment: production
+        annotations:
+          summary: "High prediction latency"
+          description: "95th percentile prediction latency is above 2 seconds"
+          runbook_url: "https://your-runbook.com/high-latency"
+
+      # No Predictions Alert
+      - alert: NoPredictions
+        expr: rate(churn_predictions_total[10m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+          environment: production
+        annotations:
+          summary: "No predictions received"
+          description: "No predictions have been made in the last 10 minutes"
+          runbook_url: "https://your-runbook.com/no-predictions"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% for 5 minutes"
+
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: (100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for 5 minutes"
