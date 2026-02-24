@@ -881,16 +881,15 @@
         async function apiCall(endpoint, method = 'GET', data = null) {
             const url = new URL(endpoint, window.location.origin);
             
-            // Add API key as query parameter for all requests
-            url.searchParams.append('api_key', API_KEY);
-            
             const options = {
                 method,
-                headers: {}
+                headers: {
+                    'X-API-Key': API_KEY,
+                    'Content-Type': 'application/json'
+                }
             };
             
             if (data) {
-                options.headers['Content-Type'] = 'application/json';
                 options.body = JSON.stringify(data);
             }
             
@@ -1091,10 +1090,12 @@
             
             try {
                 const url = new URL('/predict/upload', window.location.origin);
-                url.searchParams.append('api_key', API_KEY);
                 
                 const response = await fetch(url.toString(), {
                     method: 'POST',
+                    headers: {
+                        'X-API-Key': API_KEY
+                    },
                     body: formData
                 });
                 
@@ -1232,7 +1233,11 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             // Test API connection
-            fetch(`/test?api_key=${API_KEY}`)
+            fetch(`/test`, {
+                headers: {
+                    'X-API-Key': API_KEY
+                }
+            })
                 .then(response => response.json())
                 .then(() => {
                     loadStats();
